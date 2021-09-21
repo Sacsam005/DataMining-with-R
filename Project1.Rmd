@@ -6,7 +6,7 @@ output:
   html_document: default
   pdf_document: default
 ---
-
+***
 ##### **Data Mining with R**
 
 
@@ -20,18 +20,19 @@ Results <- read_excel("Results.xlsx")
 str(Results)
 summary(Results$Home_goal)
 ```
-
+***
 
 **STATISTICS CALCULATIONS**
 ```{r}
 mean(Results$Home_goal)
 sd(Results$Home_goal)
 ```
-
+***
 
 **DESCRIPTIVE STATISTICS**
 
 \   The summary shows the descriptive statistics for the qualitative data analytic variable. The average Home_goal was 1.5(where standard deviation(sd) = 1.3), with a minimum goal score of 1 and maximum goal score of 7 in the whole season 2017-2018. 
+***
 
 
 **GRAPHICAL DISPLAYS**
@@ -47,7 +48,7 @@ hist(Results$Home_goal)
 ```
 
 \   **From the histogram, there seems to be a couple of observations higher than all other observations (see the bar on the right side of the plot). From the figure, we can say that the distribution is right tailed. The no. of times  1 or 2 Home goals were scored is comparatively higher. There is a conclusive evidence from the graph that the Home team has managed to score the maximum score of 7 goals.**
-
+***
 
 **BOX PLOT**
 
@@ -72,6 +73,7 @@ abline(h = quantile(Results$Home_goal, c(0.25, 0.75)), col = "Red")
 boxplot.stats(Results$Home_goal)$out
 ```
 
+***
 
 **CHECKING NORMALITY IN R (VISUAL METHODS)**
 
@@ -91,6 +93,8 @@ ggdensity(Results$Home_goal, fill = "Red")
 
 \   Since a relatively small number of data points in normally distributed data fall in the few highest and few lowest quantiles, we are more likely to see the results of random fluctuations at the extreme ends. We now understand that the Premier League Results data is not precisely normal, but not too far off.
 
+***
+
 **QQ PLOT**
 
 \   QQ plot (or quantile-quantile plot) draws the correlation between a given sample and the normal distribution. A 45-degree reference line is also plotted. In a QQ plot, each observation is plotted as a single dot. If the data are normal, the dots should form a straight line.
@@ -103,6 +107,7 @@ qqline(Results$Home_goal)
 
 \   This dataset is not normally distributed, but doesn’t look that far off. The Q-Q plot clearly shows that the quantile points do not lie on the theoretical normal line. We see that the sample values are generally lower than the normal values for quantiles along the smaller side of the distribution. The points fall along a line in the middle of the graph, but curve off in the extremities. Normal Q-Q plots that exhibit this behavior usually mean that the data have more extreme values than would be expected if they truly came from a Normal distribution.
 
+***
 
 **SHAPE OF DISTRIBUTION**
 
@@ -126,7 +131,8 @@ cex=1)
 ```
   
 \   Here, from the scatter plot diagram with points, we can see that the trend is going downwards while going from left to right. It means that the Home_goals were scored more than the Away_goal.
-  
+
+***
 
 **CORRELATION IN SCATTER PLOT IN R**
 
@@ -136,6 +142,7 @@ cor(x=Results$Home_goal, y=Results$Away_goals)
 ```
 \   It looks like there is a moderately strong relationship in the scatter plot which is true for the correlation cause it matches to what we see in the plot. 
 
+***
 
 **FREQUENCY**
 
@@ -152,6 +159,7 @@ table(Results$Away_goals)
 ```
 \   There has been 136 cases when the Away teams have failed to score and open up their account. They have managed to score 6 goals (max) just once and 5 goals for a couple of occasions. Also, the Away teams have failed to score the maximum value of the dataset i.e. 7 (goals).
 
+***
 
 **RELATIVE FREQUENCY**
 
@@ -161,6 +169,7 @@ table(Results$Away_goals)
 table(Results$Away_goals)/length(Results$Away_goals)
 ```
 
+***
 
 **TWO-WAY TABLE IN R**
 
@@ -181,7 +190,7 @@ table(Results$Home_goal)
 \   There has been 90 cases when the Home teams have failed to score and open up their account. They have managed to score 5 goals 14 times and 4 goals for 23 occasions. Also, the Home teams have succeed to score the maximum value of the dataset i.e. 7 (goals).
 Thus, Home teams seems to have more goal scores on their account than Away teams.
 
-
+***
 
 **PARALLEL BOX PLOT**
 
@@ -200,6 +209,7 @@ boxplot(Results$Home_goal~Results$Home_team, col="Orange", main="Home Impact", y
 
 \   *Burnley, Swansea City, Stoke City, WestBromich Albion* are the teams that look poor on the basis of their home performances. These teams failed to take the home advantage and make home impact as per the plot.
 
+***
 
 **VISUALIZATION AND STATISTICAL COMPUTATION**
 
@@ -223,6 +233,7 @@ D= Draw (its the case when Away_team and Home_team scored same number of goals i
 
 \    We can clearly see from the graph that Home teams have been able to produce more productive results than the away teams. The case when Away teams have won has lesser no. of blocks in the graph than the Home team. The Home teams have produced more no. of goals which has been closer or above the mean score of the entire season.
 
+***
 
 #Statistical Computation
 ```{r}
@@ -231,8 +242,11 @@ sum(Results$Home_goal)
 sum(Results$Away_goals)
 ```
 
+***
+
 \   The number of Home goals is 146 more than that of the Away goals. This shows the dominance of the team hosting on their stadium. 
 
+***
 
 **DATA ANALYSIS**
 
@@ -242,10 +256,12 @@ Here in this dataset, I have "Home_team", "Away_team", "Season", "Results" as fo
 
  When looking for datasets, the main things I took into consideration are the usefulness, quality, and format of the data. For this project, I have pulled data from (https://www.premierleague.com/results.) 
  as it is a well-established source and has the necessary stats in a relatively well-organized format, which will only require some light cleaning. Since, I only had a total of 6 variabes out of which 5 have been used to compare and relate with each other, I did not have to bother cleaning much as the other one variable is the year of the season (2017-2018) which remain unchanged and unaffected within the dataset. 
- 
+
+*** 
  
 **CONCLUSION**
 
 
 \   By doing exploratory data analysis, I have discovered that a winning team tends to be successful at both the venues. There are many other features and relations that we can explore. For example, it would be interesting to see how the game evolves. There have been many cases when the teams playing at away venues have failed but made up at their home venues. "Burnley" seems to be the only outlier team in this case whose away results are vastly better than its home results. Overall, it is supposed to be a successful franchise with it's rank secured within top 10. All information generated can help us to build up machine learning models to predict the results of football games.
 
+***
