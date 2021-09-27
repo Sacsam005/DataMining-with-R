@@ -1,0 +1,410 @@
+---
+title: '**Project1 ''Part 2''**'
+author: '**Sachin Samal (ECU ID 250008)**'
+date: '**Sept 21, 2021**'
+output:
+  html_document: default
+  pdf_document: default
+---
+*** 
+
+###  **DATA MINING WITH R**
+
+***
+
+\   Here in this part of project, I have decided to do some classifications with my previous dataset from [**Project 1**](https://rpubs.com/sacsam005/808877). For this project, I have pulled the data from [**English Premier League Results**](https://www.premierleague.com/results.).
+
+***
+
+####    **LOADING MY EXCEL DATA INTO R ENVIRONMENT**
+
+```{r}
+library(readxl)
+Results <- read_excel("Results.xlsx")
+str(Results)
+summary(Results$Home_goal)
+```
+
+***
+
+**Total no. of Observations and Variables**
+```{r}
+dim(Results)
+```
+
+*** 
+
+####    **TAKING SAMPLE DATA**
+
+ \   **I am taking almost 1/3 no. of observations from my data set as a sample.**
+  
+```{r}
+s <- sample(380, 125)
+```
+
+***
+
+####   **The head() and tail() function in R**
+
+
+\   **The head() and tail() function in R are often used to read the first and last n rows of a dataset.**
+
+```{r}
+head(Results)
+```
+
+```{r}
+tail(Results)
+```
+
+***
+
+\   ***From the head and tail output, we can notice the data is not shuffled. This means that when we split our data between a train set and test set, the algorithms will never see the features of the middle data or other than the data taken. This can lead to a poor prediction.***
+
+\   **So, lets shuffle the data,**
+
+```{r}
+#shuffling_data(head)
+shuffle_index <- sample(1:nrow(Results))
+head(shuffle_index)
+```
+
+\   **In the above code; sample(1:nrow(Results)): generates a random list of index from 1 to 380 (i.e. the maximum number of rows).**
+
+***
+
+####   **SPLITTING THE DATA**
+
+***
+
+\   **Lets separate my Results data into two parts. I'm gonna split it into traning and testing data.** 
+
+```{r}
+library(rpart)
+#split data into training data
+Results_train <- Results[s,]
+dim(Results_train)
+
+#split data into testing data
+Results_test <- Results[-s,]
+dim(Results_test)
+```
+
+***
+
+\   **I have used the function prop.table() combined with table() to verify if the randomization process is correct.**
+
+```{r}
+prop.table(table(Results_train$Result))
+```
+***
+
+###    **BUILDING A DECISION TREE IN R**
+
+***
+
+```{r}
+library(rpart)
+library(rpart.plot)
+fit <- rpart(Result~., data = Results, method = 'class')
+rpart.plot(fit, extra = 101)
+```
+
+\   ***Here; in the above decision tree:***
+          
+       A = Away_team (it means the case when Away_team is the winner)
+          
+       H = Home_team (it means the case when Home_team is the winner)
+          
+       D = Draw (its the case when Away_team and Home_team scored same number of goals in the match)
+
+***
+
+####    **MAKE A PREDICTION**
+
+\   **To make a prediction, we can use the predict() function. The basic syntax of predict for R decision tree is:**
+
+```{r}
+#making and testing the prediction
+predict_unseen <-predict(fit, Results_test, type = 'class')
+table_mat <- table(Results_test$Result, predict_unseen)
+table_mat
+```
+
+***
+
+###    **CREATING A CONFUSION MATRIX IN R**
+
+***
+
+```{r}
+library(caret)
+library(gmodels)
+set.seed(380)
+X<-factor(ceiling(runif(380)-0.25))
+Y<-factor(ceiling(runif(380)-0.20))
+
+confusionMatrix(X,Y, positive="1")
+CrossTable(X,Y)
+```
+
+\   **Here; we have accuracy of around 58%. But IT might be giving the wrong idea about the result. Lets think about that. Thats where we come across the dual concept of Precision and Recall.**
+
+***
+
+####    **CALCULATING PRECISION AND RECALL IN R**
+
+\   **Precision tells us how many of the correctly predicted cases actually turned out to be positive. Recall tells us how many of the actual positive cases we were able to predict correctly with our model.**
+
+```{r}
+library(caret)
+#calculating precision and recall
+precision <- posPredValue(X,Y, positive="1")
+recall <- sensitivity(X,Y, positive="1")
+f1 <- (2*precision*recall)/(precision+recall)
+precision
+recall
+f1
+data.frame(precision, recall, f1) 
+```
+
+\   **Here, Precision and Recall are around 75% and 71% respectively. That means 75% of the time, its predictions cases are correct and 71% of the time, it correctly identifies the positive predicitons as per the model.**
+
+***
+
+###    **CHI-SQUARE STATISTICS IN R**
+
+***
+
+```{r}
+library(vcd)
+library(grid)
+#calculating proportions from the table
+prop.table(table(X,Y),1)
+```
+***
+
+\   **The 'prop.table( )' function will calculate these proportions in R**
+
+***
+
+```{r}
+#calculating Pearson's Chi-squared test
+chisq.test(table(X,Y),correct=FALSE)
+plot(table(X,Y), shade = TRUE)
+assocstats(table(X,Y))
+```
+
+\   **Note: that the title for the output, 'Pearson's Chi-squared test' indicates that these results are for the uncorrected (not Yates' adjusted) chi-square test.**
+
+***
+
+###    **CROSS-VALIDATION IN R**
+
+***
+
+\    **Cross-validation techniques is implemented to know whether the designed model is working fine or not, by testing it against those data points which were not present during the training of the model. These data points will serve the purpose of unseen data for the model, and it becomes easy to evaluate the model’s accuracy. Hence, it is very effective technique of machine learning model.**
+
+**SETTING A CONTROL PARAMETER**
+
+```{r}
+library(caret)
+# control parameters
+trctrl <- trainControl(method = "cv", n = 4, classProbs = TRUE)
+```
+
+***
+
+**RUNNING THE CROSS VALIDATION TECHNIQUE**
+
+***
+
+**THE VALIDATION SET APPROACH**
+
+***
+
+\   **Here, I have used The validation set approach so, I am splitting the data into two sets: one set is used to train the model and the remaining other set is used to test the model.**
+
+```{r}
+set.seed(125)
+## fitting decision tree classification model
+Results <- train(Home_goal ~ Result,
+                         data = Results_test, 
+                         method = "rpart",
+                         parms  = list(split = "gini"), 
+                         trControl = trctrl)
+# model summary
+Results
+```
+
+***
+
+```{r}
+set.seed(125)
+## fitting decision tree classification model
+Results <- train(Home_goal ~ Result,
+                         data = Results_train, 
+                         method = "rpart",
+                         parms  = list(split = "gini"), 
+                         trControl = trctrl)
+# model summary
+Results
+```
+
+***
+
+###   **VARIABLE IMPORTANCE WITH SIMPLE REGRESSION**
+
+***
+
+```{r}
+plot(varImp(Results), main="Variable Importance with Simple Regression")
+```
+
+***
+
+\   **Overfitting is the difference in prediction performance between the testing data and the training data.**
+
+\   **Overfitting = PerformanceTraining − PerformanceTest**
+
+\   **Equivalently, Overfitting is the difference in prediction error between the testing data and the training \       data.**
+
+\   **Overfitting = ErrorTest − ErrorTraining**
+
+\   **My model suffers overfitting because the  prediction performance in the test data comparativelt lower than the prediction performance in the training data set. Also, the validation loss is slightly greater than the training loss.**
+
+***
+
+###   **LETS WORK ON A SAMPLE DATA(n~100) AND MAKE SOME PREDICTIONS**
+
+***
+
+####    **BUILDING A DECISION TREE FROM RANDOM SAMPLE**
+
+```{r}
+library(rpart)
+library(rpart.plot)
+set.seed(100)
+#building a decision tree from test dataset
+fit <- rpart(Result~., data = Results_train, method = 'class')
+rpart.plot(fit)
+```
+
+***
+
+####    **COMPUTING FOR A CONFUSION MATRIX ON THIS MODEL**
+
+```{r}
+set.seed(0)
+#calculating a confusion matrix
+actual = c('A','D','H')[runif(100, 1,5)] # actual labels
+predicted = actual # predicted labels
+predicted[runif(30,1,100)] = actual[runif(40,1,100)]  # introduce incorrect predictions
+cm = as.matrix(table(Actual = actual, Predicted = predicted)) # create the confusion matrix
+cm
+```
+
+```{r}
+n = sum(cm) # number of instances
+nc = nrow(cm) # number of classes
+diag = diag(cm) # number of correctly classified instances per class 
+rowsums = apply(cm, 1, sum) # number of instances per class
+colsums = apply(cm, 2, sum) # number of predictions per class
+p = rowsums / n # distribution of instances over the actual classes
+q = colsums / n # distribution of instances over the predicted classes
+
+#calculating accuracy
+accuracy = sum(diag) / n 
+accuracy  
+
+#calculating precision, recall, f1_measure
+precision = diag / colsums 
+recall = diag / rowsums 
+f1 = 2 * precision * recall / (precision + recall) 
+
+data.frame(precision, recall, f1) 
+```
+
+***
+
+**oneVsAll**
+
+\   **I am calculating oneVsAll because this is useful to look at the performance of the classifier with respect to one class at a time before averaging the metrics when the instances are not uniformly distributed over the classes. In the following script, I will compute the one-vs-all confusion matrix for each class (3 matrices in this case). We can think of the problem as 3 binary classification tasks where one class is considered the positive class while the combination of all the other classes make up the negative class.**
+
+```{r}
+#calculating  oneVsAll
+
+oneVsAll = lapply(1 : nc,
+                      function(i){
+                        v = c(cm[i,i],
+                              rowsums[i] - cm[i,i],
+                              colsums[i] - cm[i,i],
+                              n-rowsums[i] - colsums[i] + cm[i,i]);
+                        return(matrix(v, nrow = 2, byrow = T))})
+oneVsAll
+```
+
+***
+
+**Majority-class Metrics**
+
+\   **Here, I am using majority-class index to determine a particular class which dominates in my overall dataset. This ensures a high overall accuracy as most of the labels will be predicted correctly. If having a high accuracy is a sole objective, then a naive majority-class model can be better than a learned model in many cases. Below I have calculated the expected results of a majority-class classifier applied on the same sample data set. Recall on the majority class is equal to 1 (all majority class instances will be predicted correctly).**
+
+```{r}
+mcIndex = which(rowsums==max(rowsums))[1] # majority-class index
+mcAccuracy = as.numeric(p[mcIndex]) 
+mcRecall = 0*p;  mcRecall[mcIndex] = 1
+mcPrecision = 0*p; mcPrecision[mcIndex] = p[mcIndex]
+mcF1 = 0*p; mcF1[mcIndex] = 2 * mcPrecision[mcIndex] / (mcPrecision[mcIndex] + 1)
+mcIndex
+mcAccuracy
+data.frame(mcRecall, mcPrecision, mcF1)
+```
+
+***
+
+**Random-guess Metrics**
+
+\   **This calculation is useful to compare my model for the same reasons discussed above. If I have to make a random guess and predict any of the possible labels, the expected overall accuracy and recall for all classes would be the same as the probability of picking a certain class. The expected precision would be the same as the probability that a chosen label is actually correct, which is equal to the proportion of instances that belong to a class.**
+
+```{r}
+(n / nc) * matrix(rep(p, nc), nc, nc, byrow=F)
+rgAccuracy = 1 / nc
+  rgPrecision = p
+  rgRecall = 0*p + 1 / nc
+  rgF1 = 2 * p / (nc * p + 1)
+rgAccuracy
+data.frame(rgPrecision, rgRecall, rgF1)
+```
+
+***
+
+####    **CHI-SQUARE STATISTICS IN R FOR RANDOM SAMPLE**
+
+```{r}
+prop.table(table(actual, predicted),1)
+chisq.test(table(actual, predicted),correct=FALSE)
+plot(table(actual, predicted),
+shade = TRUE)
+assocstats(table(actual, predicted))
+```
+
+***
+
+###   **DECISION TREE ANALYSIS**
+
+***
+
+\   **It takes two vectors as the input to perform Chi-square test in R. I did set `correct=FALSE` to turn off Yates’ continuity correction. From the decision tree of my original data set, I got a high chi-squared value but a p-value="0.5644" which is higher than p="0.05"(standard) significance level. So, I concluded that the tested variables do not have a significant relationship. Also, the value for Phi-coefficient="0.12", points to weak positive relationship between the variables which means that there is no statistically significant association between them.**
+
+\   **From the decision tree of my random sample data set, I got a high chi-squared value and a p-value="1.029e-15" which is less than p="0.05"(standard) significance level. So, I concluded that that the tested variables have a significant relationship between them. **
+
+***
+
+###   **CONCLUSION**
+
+***
+
+\   **I think that the test results from the decision tree of my original data set are very much acceptable in accordance to the reality of the data set. The data set of English Premier League results does not have a significant connection between the variables. There are several other external factors which could manipulate the outcome of the statistics and probabilities. However, by doing this classification, I was able to find the commonalities of connection between dependent and independent variable within the data set.**
+
+***
