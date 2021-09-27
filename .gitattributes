@@ -1,3 +1,3 @@
 *.R linguist-detectable=True
-*. html linguist-detectable=False
-*. xml linguist-detectable= False
+*.html linguist-detectable=False
+*.TeX linguist-detectable=False
