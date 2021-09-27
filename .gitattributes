@@ -1,1 +1,3 @@
-static/* linguist-vendored
+*.R linguist-detectable = True
+*. html linguist-detectable=False
+*. xml linguist-detectable= False
