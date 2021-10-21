@@ -4,4 +4,4 @@ In this project, I will be working on different parts to perform EDA, classifica
 /** https://rpubs.com/sacsam005/808877 **/
 /** https://rpubs.com/sacsam005/813688 **/
 
-<img src="https://images.ctfassets.net/fi0zmnwlsnja/2YEzbuY8jCMVRamXJKz25/2b6319378bc8ac0d4d368d4ec5393818/dashboard-design-dashboard-og.png">
+<img src="https://sportshandle.com/wp-content/uploads/2019/03/sports-betting-data.jpg">
