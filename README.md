@@ -3,5 +3,5 @@ I have decided to work on a dataset of results of 380 Premier League matches in 
 In this project, I will be working on different parts to perform EDA, classification, association, and cluster analysis of my overall data. Hereby; I have attached links which will take you to different documentation of my analysis.
 /** https://rpubs.com/sacsam005/825079 **/
 /** https://rpubs.com/sacsam005/813688 **/
-
+/** https://rpubs.com/sacsam005/825478 **/
 <img src="https://sportshandle.com/wp-content/uploads/2019/03/sports-betting-data.jpg">
