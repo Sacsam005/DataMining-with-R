@@ -1,0 +1,235 @@
+---
+title: '**Project 1 ''Part 3-Association''**'
+author: '**Sachin Samal (ECU ID 250008)**'
+date: '**Oct 21, 2021**'
+output:
+  html_document: default
+  pdf_document: default
+---
+*** 
+
+###  **DATA MINING WITH R**
+
+***
+
+\   Here in this part of project, I have decided to work on the association with my previous dataset from [<u>**Project 1**</u>](https://rpubs.com/sacsam005/808877) and [<u>**Project 2**</u>](https://rpubs.com/sacsam005/813688). For this project, I have pulled the data from [<u>**English Premier League Results**</u>](https://www.premierleague.com/results.).
+
+***
+
+###    **WHAT IS ASSOCIATION?**
+
+\   **It is the method to discover relationships between seemingly independent relational databases or other data repositories. It  aims to observe frequently occurring patterns, correlations, or associations from datasets found in various kinds of databases such as relational databases, transactional databases, and other forms of repositories.**   
+
+***
+
+####   **LETS START OUT ASSOCIATION MINING...**
+
+***
+
+####    **LOADING MY EXCEL DATA INTO R ENVIRONMENT**
+
+```{r}
+library(readxl)
+Results <- read_excel("Results.xlsx")
+str(Results)
+summary(Results$Home_goal)
+```
+
+***
+
+#### **ASSOCIATION MINING WITH R**
+
+```{r}
+library(arules)
+library(arulesViz)
+```
+
+\  **Here, I have added some new libraries. Now, I need to convert the data for association analysis.**
+
+***
+
+\   **Now, I need to look at the columns to see if I can convert them into factors (or Boolean values) for analysis. This is because if not, I have to use different methods like *"Kruskal Wallis test" or "Chi-square test"* based on the requirement of my dataset.**    
+
+```{r}
+colnames(Results)[c(1,2,3,4,5)]
+```
+
+\   **I don't find anything that needs much attention. So , I will continue with the process as it needs.**
+
+***
+
+####   **CREATE TRANSACTION**  
+
+***
+
+\   **I will let R do the default discretization to the rest of the data.  This is because I could not come up with better cutoffs for what is left in the dataset.**
+
+
+```{r}
+library(ggplot2)
+trans <- transactions(Results)
+```
+
+\   **The conversion gives a warning because only discrete features (factor and logical) can be directly translated into items. Continuous features need to be discretized first.**
+
+***
+
+```{r}
+summary(Results[5])
+ggplot(Results, aes(Home_goal)) + geom_histogram(fill='blue', color='darkred')
+table(Results$Home_goal)
+```
+
+```{r}
+library(dplyr)
+Results <- Results %>% mutate(Home_goal = Home_goal > 0)
+ggplot(Results, aes(Home_goal)) + geom_bar(fill='darkred', color='blue')
+
+```
+
+```{r}
+table(Results$Home_goal)
+```
+
+\  **The condition we had was if (Home_goal > 0). From the table, we can conclude that home goals are more frequently happening than away goals.**
+
+***
+
+####  **INSPECT TRANSACTION**
+
+\   **Now, Lets run the transaction and see how the data has cleaned.**
+
+```{r}
+summary(trans)
+```
+
+***
+
+```{r}
+library(colorRamps)
+#plotting image for transaction
+image(trans, fill="red")
+```
+
+####    **THE MOST FREQUENT ITEMS ON THE DATASET**
+
+```{r}
+frequentItems <- apriori(trans, parameter=list(target = "frequent"))
+```
+
+```{r}
+inspect(frequentItems)
+```
+
+```{r}
+#calculating the frequent items
+frequentItems
+ggplot(tibble(`Itemset Size` = factor(size(frequentItems))), aes(`Itemset Size`)) + geom_bar(fill = "purple", color = "black")
+```
+
+***
+
+####  **Apriori WITH R - GENERATING RULES**
+
+\   **We will generate parameters support and confidence for rule mining and lift for interestingness evaluation.**
+
+**Support indicates how frequently the itemset appears in the dataset.**
+
+**Confidence is the proportion of the true positive of the rule.**
+
+**Lets find out the rules using the apriori algorithm.**
+
+```{r}
+library(arules)
+#association rules.
+rules <- apriori(Results, 
+                 parameter = list(supp = 0.05, conf = 0.9,
+                                  target = "rules"))
+```
+
+\   **The Apriori algorithm generated 10 rules with the given constraints (parameters). Lets dive into the Parameter Specification section of the output.**
+
+**minval** is the minimum value of the support an itemset should satisfy to be a part of a rule.
+
+**smax** is the maximum support value for an itemset.
+
+**arem** is an Additional Rule Evaluation Parameter (similar to lift).
+
+**aval** is a logical indicating whether to return the additional rule evaluation measure selected with arem.
+
+**originalSupport** is the traditional support value that consider both LHS and RHS items for calculating support. If you want to use only the LHS items for the calculation then you need to set this to FALSE.
+
+**maxtime** is the maximum amount of time allowed to check for subsets.
+
+**minlen** is the minimum number of items required in the rule.
+
+**maxlen** is the maximum number of items that can be present in the rule.
+
+***
+
+```{r}
+#length
+length(rules)
+
+#sorting the rules and printing it
+rules.sorted <-sort(rules, by="lift")
+inspect(rules.sorted)
+```
+
+
+```{r}
+summary(rules)
+#plot rules.sorted
+plot(rules.sorted)
+plot(rules, method = "graph", measure = "lift", shading = "confidence", engine = "htmlwidget")
+```
+
+***
+
+###   **Sort by support**
+```{r}
+rules <- apriori(trans, parameter = list(support = 0.05, confidence = 0.9))
+```
+
+###   **Lets inspect the top three rules sorted by confidence.**
+
+```{r}
+inspect(head(sort(rules, by = "confidence"), 3))
+```
+
+***
+
+###   **VISUALIZING ASSOCIATION RULES**
+
+```{r}
+plot(rules,jitter = 1)
+```
+
+```{r}
+plot(rules,  shading = "order", color=c("darkred", "purple"))
+```
+
+***
+
+```{r}
+#Graph plot for items
+plot(rules, method="graph", max=20, control=list(verbose = FALSE), colors=c("red", "green"))
+plot(rules, method = "matrix", measure=c("support","confidence"))
+```
+
+***
+
+###   **ASSOCIATION MINING ANALYSIS**
+
+\   **Here, association rules can be used to understand the prediction about which sides either home or away, are going to be more successful in future based on their current perdormances and result. Understanding the association or co-occurence will help us plan what promo or recommendation we will need to give to organizer based on their current outcomes. Network analysis help further help us find more insight compared to if only we look at the rules individually.**
+
+***
+
+###   **CONCLUSION**
+
+\   **This method can be modified and implemented in different ways, depending on the user’s interest. A deeper look into the outcomes can establish additional rules for a more detailed analysis. From this analysis, I have found that the proposed association rule for data mining can be effective to extract football tactics from the team's individual performance.**
+
+\   **More than 60% times, the home teams have won when they have scored goals >2, while the away teams have had draw or lost outcomes on the remaining part. Although the presented technique is not a sophisticated measure for establishing a general recommendation pattern in this dataset, it provides us with an underlying relationships between the teams and their goal differences. Such approach can also be incorporated in many activities, for instance in pitch analysis or a marketing campaign.**
+
+***
+-----------------------------------------------------------------------END-----------------------------------------------------------------------
