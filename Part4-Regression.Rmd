@@ -1,0 +1,230 @@
+---
+title: '**Project 1 ''Part 4''-''Regression''**'
+author: '**Sachin Samal (ECU ID 250008)**'
+date: '**Nov 12, 2021**'
+output:
+  html_document: default
+  pdf_document: default
+---
+*** 
+
+###  **DATA MINING WITH R**
+
+***
+
+\   Here in this part of project, I have decided to perform the regression analysis on my previous dataset from [<u>**Project 1**</u>](https://rpubs.com/sacsam005/808877), [<u>**Project 2**</u>](https://rpubs.com/sacsam005/813688) and [<u>**Project 3**</u>](https://rpubs.com/sacsam005/825478). For this project, I have pulled the data from [<u>**English Premier League Results**</u>](https://www.premierleague.com/results.).
+
+***
+
+###    **WHAT IS REGRESSION?**
+
+\   **It is a data mining technique used to predict the range of numerical values given in a particular dataset. It is different from association but quite similar to classification.
+For comparison, you can visit, my [<u>**Project 2**</u>](https://rpubs.com/sacsam005/813688) where I have performed classification on this dataset. Regression might be used to predict the cost of product or service, financial forecasting, environmental modeling and analysis of trends.**   
+
+***
+####    **LOADING MY EXCEL DATA INTO R ENVIRONMENT**
+```{r}
+library(readxl)
+Results <- read_excel("Results.xlsx")
+str(Results)
+```
+```{r}
+x<-c(Results$Home_goal)
+y<-c(Results$Away_goal)
+```
+
+
+***
+
+####   **LETS START OUT REGRESSION MINING...**
+
+\   **Correlation describes the "degree of relationship" between two variables. It ranges from -1 to +1. Negative values indicate that as one variable increases the other variable decreases.  Positive values indicate that as one variable increase the other variable increases as well.  There are three options to calculate correlation in R, and we will introduce two of them below.**
+
+####    **To get the Correlation R**
+```{r}
+cor(Results$Home_goal, Results$Away_goal, method="pearson")
+
+```
+\   **Here, my correlation value is negative that means, when Home goal increases, Away goal decreases, which practically makes sense.**
+
+\   **I think I'm heading in a right direction.**
+
+***
+
+\   We used the ‘Pearson’ correlation method here. 
+$$
+r = \frac{\sum_{i=1}^n(x_i-\overline x)(y_i-\overline y )}{(n-1)s_xs_y}
+$$
+
+**Let x=Home_goal, y=Away_goal, then;**
+```{r}
+sx = sd(x)
+sy = sd(y) 
+n = length(x)
+xbar = mean(x)
+ybar = mean(y)
+numerator = mean((x-xbar)*(y-ybar))*n
+r = numerator/((n-1)*sx*sy)
+r
+```
+**Now, Lets perform correlation test to futher examine the detail relationship between this two variables:**
+
+```{r}
+cor.test(Results$Home_goal, Results$Away_goal)
+```
+
+We already had a negative correlation value of -0.13, which is once again verified through this method.
+
+Also, looks like we have a very small p-value and 95% confidence interval of the correlation.
+
+**Let’s also get the equation of the linear relationship.
+I just have two variables with numerical values so let me go with one function and see if the intercept in the linear regression is significant.**
+
+```{r}
+lm(Results$Away_goal~Results$Home_goal)
+```
+
+**The argument `Results$Away_goal~Results$Home_goal` to lm function is a model formula.**
+
+I performed my function as I did **y~x** i.e. **`Results$Away_goal~Results$Home_goal`**. Let's make some predictions:
+```{r}
+fit = lm(y~x)
+slope = coef(fit)[2]
+intercept = coef(fit)[1]
+yhat <- function(xpredict){
+  return( slope*xpredict+intercept)
+}
+yhat(10)
+```
+
+```{r}
+plot(Results$Away_goal~Results$Home_goal, data = Results, col = "blue")
+```
+
+***
+
+```{r}
+Results.num = Results[c("Home_goal", "Away_goal")]
+library(PerformanceAnalytics)
+
+chart.Correlation(Results.num,
+                   method="pearson",
+                   histogram=TRUE,
+                   pch=10)
+```
+
+\   **These statistics vary from –1 to 1, with 0 indicating no correlation, 1 indicating a perfect positive correlation, and –1 indicating a perfect negative correlation.  Like other effect size statistics, these statistics are not affected by sample size.**
+
+***
+We have already computed our estimate of the test statistic $r$.  Then $t$ is
+$$
+t =
+\frac{r\sqrt{n-2}}{\sqrt{1-r^2}}
+$$
+
+Here the degrees of freedom will be $df=n-2$
+
+```{r}
+t = r*sqrt(n-2)/sqrt(1-r^2)
+t
+```
+
+\   **A negative degree of freedom is valid as long as I don't get Infinity. It suggests that we have more statistics than we have values that can change. In this case, we have more parameters in the model than we have rows of data or observations to train the model which absolutely makes sense.**
+
+**This 't' value verifies that we are in a right direction as we already calculated it from the cor.test().**
+
+***
+
+In case we want to test the slope of the line. We consider the following as the theorectical fit:
+$$  
+\hat y = \beta_0+\beta_1x
+$$
+
+The standard error for the slope is
+$$  
+SE_{\beta_1} = \sqrt{\frac{MSE}{\sum\left(x_i-\overline x\right)^2}} 
+$$
+
+Where 
+$$
+MSE = \frac{\sum_{i=1}^n\left(y_i-\hat y_i\right)^2}{n-2}
+$$
+
+$MSE$ is referred to as the mean square error.  It adds all the square errors and divides by the adjusted total $(n-2)$ because of the degrees of freedom!
+
+```{r}
+yframe = data.frame('Result' = y)
+yhat <- predict(fit,yframe)
+MSE = sum((y-yhat)^2)/(n-2)
+MSE
+```
+
+The denominator in the $SE$ computation above is sometimes called the $S_{xx}$ The sum of the squares of $x$.
+
+```{r}
+sxx = sum((x-xbar)^2)
+```
+
+Now, we can now calculate the standard error for the slope:
+
+```{r}
+SEslope = sqrt(MSE/sxx)
+SEslope
+```
+
+In case, I have to look at the intercept, $\beta_0$, it's standard error is calculated as:
+
+$$
+SE_{\beta_0} = \sqrt{MSE\left(\frac1n+\frac{\overline x}{S_{xx}}\right)}
+$$
+
+All the value have been computed already. So, the next thing is going to be:
+
+```{r}
+SEintercept = sqrt(MSE*(1/n+xbar^2/sxx))
+SEintercept
+```
+
+***
+
+\   **Now, Let me see the summary before I proceed towards the graph.**
+
+```{r}
+summary(fit)
+```
+
+```{r}
+plot(x,y, col='brown')
+abline(fit)
+plot(fit, col="purple")
+```
+
+***
+
+**Finally, I'll conclude with a graph.**
+
+```{r}
+library('ggplot2')
+ggplot(data = Results, aes(x = Home_goal, y = Result)) +
+  geom_point() + 
+  geom_abline(slope = 1, intercept = 0) + 
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r}
+ggplot(data = Results, aes(x = Home_goal, y = Away_goal, color = factor(Result))) +
+  geom_point() 
+```
+
+###   **REGRESSION ANALYSIS**
+
+\   **From our regression analysis on the dataset of home goals and away goals, we got the negative regression value. This means that the chance of increase in one variable decrease the chance of another variable. We can relate this principle on our calculation. As we jump into our score dataset, we can see that there has been numbers of cases when the increase in probability of home goal has decreased the chance of away goal and away win and vice versa is true as well. From this analysis, I have found that the proposed regression rule for data mining can be effective to extract football tactics from the team's individual performance.**
+
+###   **CONCLUSION**
+\   **The fact that degree of freedom was negative indicates that there were more parameters in the model than we have rows of data or observations to train the model which absolutely makes sense. Though we calculated the regression value for two variables, there can be other parameters in a dataset, which can contribute to the change in calculation. Even in my dataset, I had non-numeric argument like "Result" which needed to be converted into vectors scaled values for calculation else it gets error or neglected.**
+
+\   **Although the presented technique is not a sophisticated measure for establishing a general recommendation pattern in this dataset, it provides us with an underlying relationships between the teams and their brand value. Such approach can also be incorporated in many activities, for instance in players values in teams win or win rates.**
+
+***
+
+-----------------------------------------------------------------------END----------------------------------------------------------------------------------------------------------------
